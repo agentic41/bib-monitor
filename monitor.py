@@ -31,12 +31,12 @@ def check_source(source):
         return False
 
 def send_alert(source):
-    print(f"🚨 BIB FOUND on {source['name']}!")
+    print(f"BIB FOUND on {source['name']}!")
     requests.post(
         f"https://ntfy.sh/{NTFY_TOPIC}",
-        data=f"BIB AVAILABLE on {source['name']} — BUY NOW",
+        data=f"BIB AVAILABLE on {source['name']} - BUY NOW".encode("utf-8"),
         headers={
-            "Title": f"Race Bib Alert 🚨 ({source['name']})",
+            "Title": f"Race Bib Alert ({source['name']})",
             "Priority": "urgent",
             "Tags": "rotating_light",
             "Click": source["url"]
