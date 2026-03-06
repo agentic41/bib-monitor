@@ -82,4 +82,14 @@ def send_alert(source):
 def main():
     print("Monitor started — watching 2 sources...", flush=True)
     while True:
-        f
+        for source in SOURCES:
+            available = check_source(source)
+            ts = time.strftime("%H:%M:%S")
+            if available:
+                send_alert(source)
+            else:
+                print(f"[{ts}] {source['name']}: No bibs yet", flush=True)
+        time.sleep(CHECK_INTERVAL)
+
+if __name__ == "__main__":
+    main()
