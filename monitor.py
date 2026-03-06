@@ -6,6 +6,7 @@ import sys
 NTFY_TOPIC = "leon-bib-7143-xk92"
 CHECK_INTERVAL = 10
 BOOKED_COOLDOWN = 300  # 5 min cooldown if all tickets are booked
+all_booked = ("booked" in text or "in progress" in text) and has_tickets
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; BibMonitor/1.0)"}
 
@@ -25,10 +26,9 @@ SOURCES = [
 ]
 
 def check_source(source):
-    # Skip if in booked cooldown
     if time.time() < source["booked_cooldown_until"]:
         remaining = int(source["booked_cooldown_until"] - time.time())
-        print(f"[{time.strftime('%H:%M:%S')}] {source['name']}: Skipping (all booked, {remaining}s cooldown)", flush=True)
+        print(f"[{time.strftime('%H:%M:%S')}] {source['name']}: Skipping ({remaining}s cooldown)", flush=True)
         return False
 
     try:
@@ -40,12 +40,16 @@ def check_source(source):
         if no_bibs:
             return False
 
-        # Tickets exist but all booked
-        has_tickets = "tickets for sale" in text or "bib" in text
-        all_booked = "booked" in text and has_tickets
-        if all_booked:
+        # Tickets exist but all unavailable
+        has_tickets = "tickets for sale" in text or "race numbers for sale" in text or "bib" in text
+        all_taken = has_tickets and all(
+            status in text for status in ["booked", "in progress"]
+        ) or ("booked" in text and "in progress" not in text and has_tickets) \
+          or ("in progress" in text and "booked" not in text and has_tickets)
+
+        if all_taken:
             source["booked_cooldown_until"] = time.time() + BOOKED_COOLDOWN
-            print(f"[{time.strftime('%H:%M:%S')}] {source['name']}: Tickets exist but all BOOKED — cooling down {BOOKED_COOLDOWN}s", flush=True)
+            print(f"[{time.strftime('%H:%M:%S')}] {source['name']}: All taken (booked/in progress) — cooling down", flush=True)
             return False
 
         return True
@@ -67,7 +71,7 @@ def send_alert(source):
             "Actions": f"view, Open {source['name']}, {source['url']}"
         }
     )
-    
+
 
 def main():
     print("Monitor started — watching 2 sources...", flush=True)
