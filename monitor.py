@@ -1,9 +1,11 @@
 import time
 import requests
 from bs4 import BeautifulSoup
+import sys
 
 NTFY_TOPIC = "leon-bib-7143-xk92"
-CHECK_INTERVAL = 20
+CHECK_INTERVAL = 10
+BOOKED_COOLDOWN = 300  # 5 min cooldown if all tickets are booked
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; BibMonitor/1.0)"}
 
@@ -11,30 +13,49 @@ SOURCES = [
     {
         "name": "OnReg",
         "url": "https://secure.onreg.com/onreg2/bibexchange/?eventid=7143&language=us",
-        "no_bib_phrases": ["no bib", "no entries", "sold out"]
+        "no_bib_phrases": ["no bib", "no entries", "sold out"],
+        "booked_cooldown_until": 0
     },
     {
         "name": "SportsTiming",
         "url": "https://www.sportstiming.dk/event/17008/resale?subid=77089&subhash=638949451700000000&distance=97759",
-        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen", "udsolgt", "no race numbers for sale", "there are no tickets for sale"]
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
+        "booked_cooldown_until": 0
     }
 ]
 
 def check_source(source):
+    # Skip if in booked cooldown
+    if time.time() < source["booked_cooldown_until"]:
+        remaining = int(source["booked_cooldown_until"] - time.time())
+        print(f"[{time.strftime('%H:%M:%S')}] {source['name']}: Skipping (all booked, {remaining}s cooldown)", flush=True)
+        return False
+
     try:
         r = requests.get(source["url"], headers=HEADERS, timeout=10)
         text = r.text.lower()
-        import sys
-        print(f"[DEBUG] {source['name']}:\n{text[1000:2500]}", flush=True)
-        sys.stdout.flush()
+
+        # No tickets at all
         no_bibs = any(phrase in text for phrase in source["no_bib_phrases"])
-        return not no_bibs
+        if no_bibs:
+            return False
+
+        # Tickets exist but all booked
+        has_tickets = "tickets for sale" in text or "bib" in text
+        all_booked = "booked" in text and has_tickets
+        if all_booked:
+            source["booked_cooldown_until"] = time.time() + BOOKED_COOLDOWN
+            print(f"[{time.strftime('%H:%M:%S')}] {source['name']}: Tickets exist but all BOOKED — cooling down {BOOKED_COOLDOWN}s", flush=True)
+            return False
+
+        return True
+
     except Exception as e:
         print(f"[Error] {source['name']}: {e}", flush=True)
         return False
 
 def send_alert(source):
-    print(f"BIB FOUND on {source['name']}!")
+    print(f"BIB FOUND on {source['name']}!", flush=True)
     requests.post(
         f"https://ntfy.sh/{NTFY_TOPIC}",
         data=f"BIB AVAILABLE on {source['name']} - BUY NOW".encode("utf-8"),
@@ -42,12 +63,14 @@ def send_alert(source):
             "Title": f"Race Bib Alert ({source['name']})",
             "Priority": "urgent",
             "Tags": "rotating_light",
-            "Click": source["url"]
+            "Click": source["url"],
+            "Actions": f"view, Open {source['name']}, {source['url']}"
         }
     )
+    
 
 def main():
-    print("Monitor started — watching 2 sources...")
+    print("Monitor started — watching 2 sources...", flush=True)
     while True:
         for source in SOURCES:
             available = check_source(source)
@@ -55,7 +78,7 @@ def main():
             if available:
                 send_alert(source)
             else:
-                print(f"[{ts}] {source['name']}: No bibs yet")
+                print(f"[{ts}] {source['name']}: No bibs yet", flush=True)
         time.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
