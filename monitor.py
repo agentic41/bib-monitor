@@ -16,7 +16,7 @@ SOURCES = [
     {
         "name": "SportsTiming",
         "url": "https://www.sportstiming.dk/event/17008/resale?subid=77089&subhash=638949451700000000&distance=97759",
-        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen", "udsolgt"]  # Danish too
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen", "udsolgt", "no race numbers for sale"]
     }
 ]
 
