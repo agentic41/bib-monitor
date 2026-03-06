@@ -45,9 +45,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```
-
-**`requirements.txt`**
-```
-requests
-beautifulsoup4
