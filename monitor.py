@@ -24,6 +24,7 @@ def check_source(source):
     try:
         r = requests.get(source["url"], headers=HEADERS, timeout=10)
         text = r.text.lower()
+        print(f"[DEBUG] {source['name']} page snippet: {text[500:1000]}")  # add this
         no_bibs = any(phrase in text for phrase in source["no_bib_phrases"])
         return not no_bibs
     except Exception as e:
