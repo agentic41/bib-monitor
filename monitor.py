@@ -29,9 +29,11 @@ def get_state(source):
     try:
         r = requests.get(source["url"], headers=HEADERS, timeout=10)
         text = r.text.lower()
+
         no_bibs = any(phrase in text for phrase in source["no_bib_phrases"])
         if no_bibs:
             return "empty"
+
         has_tickets = (
             "tickets for sale" in text or
             "race numbers for sale" in text or
@@ -39,11 +41,21 @@ def get_state(source):
         )
         if not has_tickets:
             return "empty"
+
+        # Only trust "in progress" / "booked" if there's also a price on the page
+        # meaning a real ticket row exists
+        has_price = "dkk" in text or "kr." in text or "price" in text
+
+        if not has_price:
+            return "empty"
+
         if "booked" in text and "in progress" not in text:
             return "booked"
         if "in progress" in text:
             return "in_progress"
+
         return "available"
+
     except Exception as e:
         print(f"[Error] {source['name']}: {e}", flush=True)
         return source["last_state"]
