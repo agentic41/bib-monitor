@@ -25,7 +25,7 @@ def check_source(source):
         r = requests.get(source["url"], headers=HEADERS, timeout=10)
         text = r.text.lower()
         import sys
-        print(f"[DEBUG] {source['name']}:\n{text[300:800]}", flush=True)
+        print(f"[DEBUG] {source['name']}:\n{text[1000:2500]}", flush=True)
         sys.stdout.flush()
         no_bibs = any(phrase in text for phrase in source["no_bib_phrases"])
         return not no_bibs
