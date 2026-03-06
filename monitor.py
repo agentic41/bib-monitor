@@ -14,73 +14,58 @@ SOURCES = [
         "url": "https://secure.onreg.com/onreg2/bibexchange/?eventid=7143&language=us",
         "no_bib_phrases": ["no bib", "no entries", "sold out"],
         "booked_cooldown_until": 0,
-        "last_state": "empty"  # track state
+        "last_state": "empty"
     },
     {
         "name": "SportsTiming",
         "url": "https://www.sportstiming.dk/event/17008/resale?subid=77089&subhash=638949451700000000&distance=97759",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
         "booked_cooldown_until": 0,
-        "last_state": "empty"  # track state
+        "last_state": "empty"
     }
 ]
 
 def get_state(source):
-    """Returns: 'empty', 'booked', 'in_progress', or 'available'"""
     try:
         r = requests.get(source["url"], headers=HEADERS, timeout=10)
         text = r.text.lower()
-
         no_bibs = any(phrase in text for phrase in source["no_bib_phrases"])
         if no_bibs:
             return "empty"
-
         has_tickets = (
             "tickets for sale" in text or
             "race numbers for sale" in text or
             "bib" in text
         )
-
         if not has_tickets:
             return "empty"
-
         if "booked" in text and "in progress" not in text:
             return "booked"
-
         if "in progress" in text:
             return "in_progress"
-
         return "available"
-
     except Exception as e:
         print(f"[Error] {source['name']}: {e}", flush=True)
-        return source["last_state"]  # keep last known state on error
+        return source["last_state"]
 
 def check_source(source):
     if time.time() < source["booked_cooldown_until"]:
         remaining = int(source["booked_cooldown_until"] - time.time())
         print(f"[{time.strftime('%H:%M:%S')}] {source['name']}: Skipping ({remaining}s cooldown)", flush=True)
         return False
-
     state = get_state(source)
     ts = time.strftime("%H:%M:%S")
     prev = source["last_state"]
     source["last_state"] = state
-
     print(f"[{ts}] {source['name']}: {state}", flush=True)
-
     if state == "booked":
         source["booked_cooldown_until"] = time.time() + BOOKED_COOLDOWN
         return False
-
     if state == "empty":
         return False
-
-    # Alert only when state changes TO available/in_progress FROM empty/booked
     if state in ("available", "in_progress") and prev in ("empty", "booked"):
         return True
-
-    return False  # already alerted, don't repeat
+    return False
 
 def send_alert(source):
     print(f"BIB FOUND on {source['name']}!", flush=True)
@@ -103,4 +88,7 @@ def main():
             should_alert = check_source(source)
             if should_alert:
                 send_alert(source)
-        time.sleep
+        time.sleep(CHECK_INTERVAL)
+
+if __name__ == "__main__":
+    main()
