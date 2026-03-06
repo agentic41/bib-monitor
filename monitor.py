@@ -24,11 +24,13 @@ def check_source(source):
     try:
         r = requests.get(source["url"], headers=HEADERS, timeout=10)
         text = r.text.lower()
-        print(f"[DEBUG] {source['name']} page snippet: {text[500:1000]}")  # add this
+        import sys
+        print(f"[DEBUG] {source['name']}:\n{text[300:800]}", flush=True)
+        sys.stdout.flush()
         no_bibs = any(phrase in text for phrase in source["no_bib_phrases"])
         return not no_bibs
     except Exception as e:
-        print(f"[Error] {source['name']}: {e}")
+        print(f"[Error] {source['name']}: {e}", flush=True)
         return False
 
 def send_alert(source):
