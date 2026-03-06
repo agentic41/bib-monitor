@@ -1,11 +1,10 @@
 import time
 import requests
-from bs4 import BeautifulSoup
 import sys
 
 NTFY_TOPIC = "leon-bib-7143-xk92"
 CHECK_INTERVAL = 10
-BOOKED_COOLDOWN = 300  # 5 min cooldown if all tickets are booked/in progress
+BOOKED_COOLDOWN = 300
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; BibMonitor/1.0)"}
 
@@ -39,7 +38,7 @@ def check_source(source):
         if no_bibs:
             return False
 
-        # Tickets exist — check if all are taken
+        # Tickets exist — check status
         has_tickets = (
             "tickets for sale" in text or
             "race numbers for sale" in text or
@@ -50,10 +49,14 @@ def check_source(source):
             has_booked = "booked" in text
             has_in_progress = "in progress" in text
 
-            # If every ticket is either booked or in progress — not worth alerting
-            if has_booked or has_in_progress:
+            # In progress = alert! Buyer might abandon
+            if has_in_progress:
+                return True
+
+            # All fully booked = cooldown
+            if has_booked:
                 source["booked_cooldown_until"] = time.time() + BOOKED_COOLDOWN
-                print(f"[{time.strftime('%H:%M:%S')}] {source['name']}: Tickets exist but all booked/in progress — cooling down {BOOKED_COOLDOWN}s", flush=True)
+                print(f"[{time.strftime('%H:%M:%S')}] {source['name']}: All booked — cooling down {BOOKED_COOLDOWN}s", flush=True)
                 return False
 
         return True
@@ -75,28 +78,8 @@ def send_alert(source):
             "Actions": f"view, Open {source['name']}, {source['url']}"
         }
     )
-"""def main():
-    print("Monitor started — watching 2 sources...", flush=True)
-    while True:
-        for source in SOURCES:
-            available = check_source(source)
-            if available:
-                send_alert(source)
-        time.sleep(CHECK_INTERVAL)"""
-
 
 def main():
     print("Monitor started — watching 2 sources...", flush=True)
     while True:
-        for source in SOURCES:
-            available = check_source(source)
-            ts = time.strftime("%H:%M:%S")
-            if available:
-                send_alert(source)
-            else:
-                print(f"[{ts}] {source['name']}: No bibs yet", flush=True)
-        time.sleep(CHECK_INTERVAL)        
-
-
-if __name__ == "__main__":
-    main()
+        f
