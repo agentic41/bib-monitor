@@ -75,15 +75,17 @@ def send_alert(source):
             "Actions": f"view, Open {source['name']}, {source['url']}"
         }
     )
-def main():
+"""def main():
     print("Monitor started — watching 2 sources...", flush=True)
     while True:
         for source in SOURCES:
             available = check_source(source)
             if available:
                 send_alert(source)
-        time.sleep(CHECK_INTERVAL)
-""" def main():
+        time.sleep(CHECK_INTERVAL)"""
+
+
+def main():
     print("Monitor started — watching 2 sources...", flush=True)
     while True:
         for source in SOURCES:
@@ -93,7 +95,7 @@ def main():
                 send_alert(source)
             else:
                 print(f"[{ts}] {source['name']}: No bibs yet", flush=True)
-        time.sleep(CHECK_INTERVAL) """
+        time.sleep(CHECK_INTERVAL)        
 
 
 if __name__ == "__main__":
