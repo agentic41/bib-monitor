@@ -9,16 +9,16 @@ BOOKED_COOLDOWN = 300
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; BibMonitor/1.0)"}
 
 SOURCES = [
-    {
+ """    {
         "name": "OnReg",
         "url": "https://secure.onreg.com/onreg2/bibexchange/?eventid=7143&language=us",
         "no_bib_phrases": ["no bib", "no entries", "sold out"],
         "booked_cooldown_until": 0,
         "last_state": "empty"
-    },
+    }, """
     {
         "name": "SportsTiming",
-        "url": "https://www.sportstiming.dk/event/17008/resale?subid=77089&subhash=638949451700000000&distance=97759",
+        "url": "https://www.sportstiming.dk/event/17008/resale?distance=97759",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
         "booked_cooldown_until": 0,
         "last_state": "empty"
