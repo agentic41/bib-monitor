@@ -1,10 +1,13 @@
+import csv
+import os
 import time
+import datetime
 import requests
-import sys
 
 NTFY_TOPIC = "leon-bib-7143-xk92"
 CHECK_INTERVAL = 10
 BOOKED_COOLDOWN = 300
+LOG_DIR = os.environ.get("LOG_DIR", "logs")
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; BibMonitor/1.0)"}
 
@@ -15,7 +18,7 @@ SOURCES = [
 #         "no_bib_phrases": ["no bib", "no entries", "sold out"],
 #         "booked_cooldown_until": 0,
 #         "last_state": "empty"
-#     }, 
+#     },
     {
         "name": "SportsTiming",
         "url": "https://www.sportstiming.dk/event/17008/resale?distance=97759",
@@ -24,6 +27,61 @@ SOURCES = [
         "last_state": "empty"
     }
 ]
+
+LOG_FIELDS = ["iso_datetime", "date", "weekday", "hour", "minute", "event", "prev_state", "new_state"]
+
+def get_log_path(source):
+    os.makedirs(LOG_DIR, exist_ok=True)
+    safe_name = source["name"].replace(" ", "_")
+    return os.path.join(LOG_DIR, f"{safe_name}_events.csv")
+
+def init_log(source):
+    path = get_log_path(source)
+    if not os.path.exists(path):
+        with open(path, "w", newline="") as f:
+            csv.DictWriter(f, fieldnames=LOG_FIELDS).writeheader()
+        print(f"[Log] Created {path}", flush=True)
+
+def load_last_state(source):
+    path = get_log_path(source)
+    last_state = "empty"
+    try:
+        with open(path, "r", newline="") as f:
+            rows = list(csv.DictReader(f))
+            if rows:
+                last_state = rows[-1]["new_state"]
+    except FileNotFoundError:
+        pass
+    source["last_state"] = last_state
+    print(f"[Log] {source['name']}: restored last state = {last_state}", flush=True)
+
+def log_event(source, prev_state, new_state):
+    now = datetime.datetime.now()
+    event = _classify_event(prev_state, new_state)
+    row = {
+        "iso_datetime": now.isoformat(timespec="seconds"),
+        "date":         now.strftime("%Y-%m-%d"),
+        "weekday":      now.strftime("%A"),
+        "hour":         now.hour,
+        "minute":       now.minute,
+        "event":        event,
+        "prev_state":   prev_state,
+        "new_state":    new_state,
+    }
+    with open(get_log_path(source), "a", newline="") as f:
+        csv.DictWriter(f, fieldnames=LOG_FIELDS).writerow(row)
+    print(f"[Log] {source['name']}: {prev_state} → {new_state} ({event})", flush=True)
+
+def _classify_event(prev, new):
+    if prev in ("empty", "booked") and new in ("available", "in_progress"):
+        return "appeared"
+    if prev in ("available", "in_progress") and new == "empty":
+        return "gone"
+    if new == "booked":
+        return "booked"
+    if new == "in_progress":
+        return "in_progress"
+    return "changed"
 
 def get_state(source):
     try:
@@ -72,6 +130,10 @@ def check_source(source):
     prev = source["last_state"]
     source["last_state"] = state
     print(f"[{ts}] {source['name']}: {state}", flush=True)
+
+    if state != prev:
+        log_event(source, prev, state)
+
     if state == "booked":
         source["booked_cooldown_until"] = time.time() + BOOKED_COOLDOWN
         return False
@@ -96,7 +158,10 @@ def send_alert(source):
     )
 
 def main():
-    print("Monitor started — watching 2 sources...", flush=True)
+    for source in SOURCES:
+        init_log(source)
+        load_last_state(source)
+    print(f"Monitor started — watching {len(SOURCES)} source(s)...", flush=True)
     while True:
         for source in SOURCES:
             should_alert = check_source(source)
