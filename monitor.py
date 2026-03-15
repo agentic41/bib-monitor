@@ -37,7 +37,9 @@ def get_state(source):
         has_tickets = (
             "tickets for sale" in text or
             "race numbers for sale" in text or
-            "bib" in text
+            "bib" in text or
+            "tickets have been resold" in text or
+            "startnummer" in text
         )
         if not has_tickets:
             return "empty"
