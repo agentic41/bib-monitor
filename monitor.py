@@ -111,7 +111,7 @@ def get_state(source):
 
         # Only trust "in progress" / "booked" if there's also a price on the page
         # meaning a real ticket row exists
-        has_price = "dkk" in text or "kr." in text or "price" in text
+        has_price = "dkk" in text or " kr" in text or "kr." in text or "price" in text
 
         if not has_price:
             return "empty"
