@@ -30,9 +30,9 @@ SOURCES = [
     },
    {
         "name": "SportsTiming5k",
-        "url": "    https://www.sportstiming.dk/event/17008/resale?distance=97758,
+        "url": "https://www.sportstiming.dk/event/17008/resale?distance=97758",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
-        "filter_distance": "10 km - kbh",
+        "filter_distance": "5 km - kbh",
         "booked_cooldown_until": 0,
         "last_state": "empty"
     },
