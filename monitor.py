@@ -7,7 +7,8 @@ import requests
 NTFY_TOPIC = "leon-bib-7143-xk92"
 CHECK_INTERVAL = 10
 BOOKED_COOLDOWN = 300
-LOG_DIR = os.environ.get("LOG_DIR", "logs")
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_DIR = os.environ.get("LOG_DIR", os.path.join(_SCRIPT_DIR, "logs"))
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; BibMonitor/1.0)"}
 
