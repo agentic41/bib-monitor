@@ -22,14 +22,15 @@ SOURCES = [
     {
         "name": "SportsTiming",
         "url": "https://www.sportstiming.dk/event/17008/resale?distance=97759",
-        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
+        "filter_distance": "10 km - kbh",
         "booked_cooldown_until": 0,
         "last_state": "empty"
     },
     {
         "name": "AarhusMotion",
         "url": "https://www.aarhusmotion.dk/event/293/resale",
-        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
         "booked_cooldown_until": 0,
         "last_state": "empty"
     }
@@ -94,6 +95,19 @@ def get_state(source):
     try:
         r = requests.get(source["url"], headers=HEADERS, timeout=10)
         text = r.text.lower()
+
+        # If a distance filter is set, only look at table rows for that distance.
+        # The server may return all distances regardless of the query param, so we
+        # narrow the text to rows that mention the target distance label.
+        filter_distance = source.get("filter_distance")
+        if filter_distance:
+            # Extract table rows (<tr>...</tr>) that contain the distance label
+            import re as _re
+            rows = _re.findall(r"<tr>.*?</tr>", text, _re.DOTALL)
+            matching = [row for row in rows if filter_distance in row]
+            if not matching:
+                return "empty"
+            text = " ".join(matching)
 
         no_bibs = any(phrase in text for phrase in source["no_bib_phrases"])
         if no_bibs:
