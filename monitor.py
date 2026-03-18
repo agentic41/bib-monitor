@@ -111,13 +111,25 @@ def get_state(source):
         # narrow the text to rows that mention the target distance label.
         filter_distance = source.get("filter_distance")
         if filter_distance:
-            # Extract table rows (<tr>...</tr>) that contain the distance label
+            # Extract table rows (<tr>...</tr>) that contain the distance label.
+            # When no tickets exist the page has no <tr> at all, so 0 rows = empty.
             import re as _re
-            rows = _re.findall(r"<tr>.*?</tr>", text, _re.DOTALL)
-            matching = [row for row in rows if filter_distance in row]
+            all_rows = _re.findall(r"<tr>.*?</tr>", text, _re.DOTALL)
+            matching = [row for row in all_rows if filter_distance in row]
             if not matching:
                 return "empty"
-            text = " ".join(matching)
+            # Rows found — tickets exist for this distance.
+            # SportsTiming uses "køb" (buy) for purchasable and "reserveret" for
+            # tickets locked in someone else's checkout.
+            row_text = " ".join(matching)
+            has_price = "dkk" in row_text or " kr" in row_text
+            if not has_price:
+                return "empty"
+            if "køb" in row_text:
+                return "available"
+            if "reserveret" in row_text:
+                return "booked"
+            return "available"
 
         no_bibs = any(phrase in text for phrase in source["no_bib_phrases"])
         if no_bibs:
