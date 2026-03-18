@@ -36,7 +36,14 @@ SOURCES = [
         "booked_cooldown_until": 0,
         "last_state": "empty"
     },
-
+   {
+        "name": "Helsingor",
+        "url": "https://www.sportstiming.dk/event/17007/resale",
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
+        "filter_distance": "Helsingor",
+        "booked_cooldown_until": 0,
+        "last_state": "empty"
+    },
     {
         "name": "AarhusMotion",
         "url": "https://www.aarhusmotion.dk/event/293/resale",
