@@ -2,7 +2,10 @@ import csv
 import os
 import time
 import datetime
+from zoneinfo import ZoneInfo
 import requests
+
+_TZ = ZoneInfo("Europe/Copenhagen")
 
 NTFY_TOPIC = "leon-bib-7143-xk92"
 CHECK_INTERVAL = 10
@@ -81,7 +84,7 @@ def load_last_state(source):
     print(f"[Log] {source['name']}: restored last state = {last_state}", flush=True)
 
 def log_event(source, prev_state, new_state):
-    now = datetime.datetime.now()
+    now = datetime.datetime.now(tz=_TZ)
     event = _classify_event(prev_state, new_state)
     row = {
         "iso_datetime": now.isoformat(timespec="seconds"),
