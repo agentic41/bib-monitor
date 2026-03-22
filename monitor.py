@@ -25,7 +25,7 @@ SOURCES = [
     },
     {
         "name": "SportsTiming10k",
-        "url": "https://www.sportstiming.dk/event/17008/resale?distance=97759",
+        "url": "https://www.sportstiming.dk/event/17008/resale",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
         "filter_distance": "10 km - kbh",
         "booked_cooldown_until": 0,
@@ -33,7 +33,7 @@ SOURCES = [
     },
    {
         "name": "SportsTiming5k",
-        "url": "https://www.sportstiming.dk/event/17008/resale?distance=97758",
+        "url": "https://www.sportstiming.dk/event/17008/resale",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
         "filter_distance": "5 km - kbh",
         "booked_cooldown_until": 0,
@@ -43,7 +43,7 @@ SOURCES = [
         "name": "Helsingor",
         "url": "https://www.sportstiming.dk/event/17007/resale",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
-        "filter_distance": "Helsingor",
+        "filter_distance": "helsingør",
         "booked_cooldown_until": 0,
         "last_state": "empty"
     },
@@ -135,7 +135,9 @@ def get_state(source):
             has_price = "dkk" in row_text or " kr" in row_text
             if not has_price:
                 return "empty"
-            if "køb" in row_text:
+            # "Køb" is rendered as HTML entity K&#248;b — check both forms.
+            # Check buyable BEFORE reserveret: a mix means at least one is purchasable.
+            if "køb" in row_text or "k&#248;b" in row_text:
                 return "available"
             if "reserveret" in row_text:
                 return "booked"
