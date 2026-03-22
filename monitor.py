@@ -140,7 +140,9 @@ def get_state(source):
             if "køb" in row_text or "k&#248;b" in row_text:
                 return "available"
             if "reserveret" in row_text:
-                return "booked"
+                # "Reserveret" = locked in someone's checkout, NOT a completed purchase.
+                # Treat as in_progress (no cooldown) so we keep checking every 10s.
+                return "in_progress"
             return "available"
 
         no_bibs = any(phrase in text for phrase in source["no_bib_phrases"])
