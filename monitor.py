@@ -72,10 +72,9 @@ def load_last_state(source):
                 last_state = rows[-1]["new_state"]
     except FileNotFoundError:
         pass
-    # Treat transient states as empty on startup — we don't know if tickets are
-    # still there after a restart, and "in_progress"/"available" as prev would
-    # suppress alerts on the next appearance.
-    if last_state in ("in_progress", "available"):
+    # Reset in_progress on startup — it was the cause of silent missed detections.
+    # Keep "available" so a still-present ticket doesn't re-alert after a restart.
+    if last_state == "in_progress":
         last_state = "empty"
     source["last_state"] = last_state
     print(f"[Log] {source['name']}: restored last state = {last_state}", flush=True)
