@@ -40,38 +40,6 @@ SOURCES = [
         "last_state": "empty"
     },
     {
-        "name": "Helsingor",
-        "url": "https://www.sportstiming.dk/event/17007/resale",
-        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
-        "filter_distance": "helsingør",
-        "booked_cooldown_until": 0,
-        "last_state": "empty"
-    },
-    {
-        "name": "Ringkobing",
-        "url": "https://www.sportstiming.dk/event/17004/resale",
-        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
-        "filter_distance": "10 km - ringkøbing",
-        "booked_cooldown_until": 0,
-        "last_state": "empty"
-    },
-    {
-        "name": "Randers",
-        "url": "https://www.sportstiming.dk/event/17005/resale",
-        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
-        "filter_distance": "10 km - randers",
-        "booked_cooldown_until": 0,
-        "last_state": "empty"
-    },
-    {
-        "name": "Middelfart",
-        "url": "https://www.sportstiming.dk/event/17006/resale",
-        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
-        "filter_distance": "10 km - middelfart",
-        "booked_cooldown_until": 0,
-        "last_state": "empty"
-    },
-    {
         "name": "AarhusMotion",
         "url": "https://www.aarhusmotion.dk/event/293/resale",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
@@ -140,10 +108,21 @@ def _classify_event(prev, new):
         return "in_progress"
     return "changed"
 
+_url_cache = {}  # per-cycle cache: url → response text
+
 def get_state(source):
     try:
-        r = requests.get(source["url"], headers=HEADERS, timeout=10)
-        text = r.text.lower()
+        url = source["url"]
+        if url in _url_cache:
+            raw = _url_cache[url]
+        else:
+            raw = requests.get(url, headers=HEADERS, timeout=10).text
+            _url_cache[url] = raw
+        text = raw.lower()
+
+        if "easy, tiger" in text or "refreshing the page a bit too often" in text:
+            print(f"[RateLimit] {source['name']}: holding last state", flush=True)
+            return source["last_state"]
 
         # If a distance filter is set, only look at table rows for that distance.
         # The server may return all distances regardless of the query param, so we
@@ -249,6 +228,7 @@ def main():
         load_last_state(source)
     print(f"Monitor started — watching {len(SOURCES)} source(s)...", flush=True)
     while True:
+        _url_cache.clear()
         for source in SOURCES:
             should_alert = check_source(source)
             if should_alert:
