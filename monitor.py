@@ -39,11 +39,35 @@ SOURCES = [
         "booked_cooldown_until": 0,
         "last_state": "empty"
     },
-   {
+    {
         "name": "Helsingor",
         "url": "https://www.sportstiming.dk/event/17007/resale",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
         "filter_distance": "helsingør",
+        "booked_cooldown_until": 0,
+        "last_state": "empty"
+    },
+    {
+        "name": "Ringkobing",
+        "url": "https://www.sportstiming.dk/event/17004/resale",
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
+        "filter_distance": "10 km - ringkøbing",
+        "booked_cooldown_until": 0,
+        "last_state": "empty"
+    },
+    {
+        "name": "Randers",
+        "url": "https://www.sportstiming.dk/event/17005/resale",
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
+        "filter_distance": "10 km - randers",
+        "booked_cooldown_until": 0,
+        "last_state": "empty"
+    },
+    {
+        "name": "Middelfart",
+        "url": "https://www.sportstiming.dk/event/17006/resale",
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
+        "filter_distance": "10 km - middelfart",
         "booked_cooldown_until": 0,
         "last_state": "empty"
     },
