@@ -8,7 +8,7 @@ import requests
 _TZ = ZoneInfo("Europe/Copenhagen")
 
 NTFY_TOPIC = "leon-bib-7143-xk92"
-CHECK_INTERVAL = 10
+CHECK_INTERVAL = 15
 BOOKED_COOLDOWN = 300
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.environ.get("LOG_DIR", os.path.join(_SCRIPT_DIR, "logs"))
