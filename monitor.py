@@ -24,6 +24,13 @@ SOURCES = [
         "last_state": "empty"
     },
     {
+        "name": "OdenseCityHalf",
+        "url": "https://www.sportstiming.dk/event/16302/resale",
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "No tickets for sale exists"],
+        "booked_cooldown_until": 0,
+        "last_state": "empty"
+    },
+    {
         "name": "SportsTiming10k",
         "url": "https://www.sportstiming.dk/event/17008/resale",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "ingen billetter til salg", "Der findes ingen billetter til salg", "ingen startnumre til salg", "udsolgt", "no race numbers for sale", "there are no tickets for sale"],
@@ -230,7 +237,7 @@ def main():
         _url_cache.clear()
         for source in SOURCES:
             should_alert = check_source(source)
-            if should_alert:
+            if should_alert and source["name"] == "OdenseCityHalf":
                 send_alert(source)
         time.sleep(CHECK_INTERVAL)
 
