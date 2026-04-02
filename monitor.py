@@ -23,6 +23,13 @@ SOURCES = [
         "booked_cooldown_until": 0,
         "last_state": "empty"
     },
+         {
+        "name": "Amsterdam",
+        "url": "https://atleta.cc/e/nhIVWn50Rcez/resale",
+        "no_bib_phrases": ["no bib", "no entries", "sold out", "no tickets", "There are currently no tickets for sale. Try again later."],
+        "booked_cooldown_until": 0,
+        "last_state": "empty"
+    },
     {
         "name": "OdenseCityHalf",
         "url": "https://www.sportstiming.dk/event/16302/resale",
@@ -237,7 +244,7 @@ def main():
         _url_cache.clear()
         for source in SOURCES:
             should_alert = check_source(source)
-            if should_alert and source["name"] == "OdenseCityHalf":
+            if should_alert and source["name"] == "Amsterdam":
                 send_alert(source)
         time.sleep(CHECK_INTERVAL)
 
