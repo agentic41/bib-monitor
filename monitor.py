@@ -126,40 +126,31 @@ _url_cache = {}  # per-cycle cache: url → response text
 
 import urllib.parse as _urlparse
 
-_atleta_session = requests.Session()
-_atleta_session.headers.update(HEADERS)
-_atleta_csrf_expires = 0.0
+ATLETA_SESSION = os.environ.get("ATLETA_SESSION", "")
+ATLETA_XSRF    = os.environ.get("ATLETA_XSRF", "")
+
 _ATLETA_GQL = ('{ event(id: "%s") { registrations_for_sale_count'
                ' registrations_for_sale(limit: 50) { resale { available } } } }')
 
-def _refresh_atleta_csrf():
-    global _atleta_csrf_expires
-    if time.time() < _atleta_csrf_expires - 60:
-        return
-    _atleta_session.get("https://atleta.cc/", timeout=10)
-    xsrf = _atleta_session.cookies.get("XSRF-TOKEN", "")
-    if not xsrf:
-        print("[Warn] Amsterdam: no XSRF-TOKEN after GET https://atleta.cc/", flush=True)
-    else:
-        _atleta_csrf_expires = time.time() + 7200
-
 def _get_atleta_graphql_state(source):
-    global _atleta_csrf_expires
     try:
-        _refresh_atleta_csrf()
-        xsrf = _urlparse.unquote(_atleta_session.cookies.get("XSRF-TOKEN", ""))
+        if not ATLETA_SESSION or not ATLETA_XSRF:
+            print(f"[Error] {source['name']}: ATLETA_SESSION / ATLETA_XSRF env vars not set", flush=True)
+            return source["last_state"]
         query = _ATLETA_GQL % source["graphql_event_id"]
-        resp = _atleta_session.post(
+        resp = requests.post(
             "https://atleta.cc/api/graphql",
             json={"query": query},
-            headers={"X-XSRF-TOKEN": xsrf, "Accept": "application/json"},
+            headers={
+                **HEADERS,
+                "Accept": "application/json",
+                "X-XSRF-TOKEN": _urlparse.unquote(ATLETA_XSRF),
+            },
+            cookies={"atleta_session": ATLETA_SESSION, "XSRF-TOKEN": ATLETA_XSRF},
             timeout=10,
-            allow_redirects=False,
         )
-        print(f"[Debug] Amsterdam GraphQL: HTTP {resp.status_code}, body={resp.text[:200]!r}", flush=True)
         body = resp.json()
         if "data" not in body:
-            _atleta_csrf_expires = 0.0
             print(f"[Error] {source['name']} GraphQL: {body}", flush=True)
             return source["last_state"]
         event = body["data"]["event"]
@@ -170,7 +161,6 @@ def _get_atleta_graphql_state(source):
             return "available"
         return "in_progress"
     except Exception as e:
-        _atleta_csrf_expires = 0.0
         print(f"[Error] {source['name']} GraphQL: {e}", flush=True)
         return source["last_state"]
 
