@@ -154,7 +154,9 @@ def _get_atleta_graphql_state(source):
             json={"query": query},
             headers={"X-XSRF-TOKEN": xsrf, "Accept": "application/json"},
             timeout=10,
+            allow_redirects=False,
         )
+        print(f"[Debug] Amsterdam GraphQL: HTTP {resp.status_code}, body={resp.text[:200]!r}", flush=True)
         body = resp.json()
         if "data" not in body:
             _atleta_csrf_expires = 0.0
