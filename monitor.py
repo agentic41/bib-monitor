@@ -139,7 +139,11 @@ def _get_atleta_graphql_state(source):
         if "application/json" not in resp.headers.get("Content-Type", ""):
             print(f"[Error] {source['name']} GraphQL: non-JSON response (HTTP {resp.status_code}): {resp.text[:200]}", flush=True)
             return source["last_state"]
-        event = resp.json()["data"]["event"]
+        body = resp.json()
+        if "data" not in body:
+            print(f"[Error] {source['name']} GraphQL: {body}", flush=True)
+            return source["last_state"]
+        event = body["data"]["event"]
         count = event["registrations_for_sale_count"]
         if count == 0:
             return "empty"
