@@ -116,50 +116,7 @@ def _classify_event(prev, new):
 
 _url_cache = {}  # per-cycle cache: url → response text
 
-import urllib.parse as _urlparse
-
-ATLETA_SESSION = os.environ.get("ATLETA_SESSION", "")
-ATLETA_XSRF    = os.environ.get("ATLETA_XSRF", "")
-
-_ATLETA_GQL = ('{ event(id: "%s") { registrations_for_sale_count'
-               ' registrations_for_sale(limit: 50) { resale { available } } } }')
-
-def _get_atleta_graphql_state(source):
-    try:
-        if not ATLETA_SESSION or not ATLETA_XSRF:
-            print(f"[Error] {source['name']}: ATLETA_SESSION / ATLETA_XSRF env vars not set", flush=True)
-            return source["last_state"]
-        query = _ATLETA_GQL % source["graphql_event_id"]
-        resp = requests.post(
-            "https://atleta.cc/api/graphql",
-            json={"query": query},
-            headers={
-                **HEADERS,
-                "Accept": "application/json",
-                "X-XSRF-TOKEN": _urlparse.unquote(ATLETA_XSRF),
-            },
-            cookies={"atleta_session": ATLETA_SESSION, "XSRF-TOKEN": ATLETA_XSRF, "cookie_consent": "1"},
-            timeout=10,
-        )
-        print(f"[Debug] Amsterdam HTTP {resp.status_code}: {resp.text[:300]!r}", flush=True)
-        body = resp.json()
-        if "data" not in body:
-            print(f"[Error] {source['name']} GraphQL: {body}", flush=True)
-            return source["last_state"]
-        event = body["data"]["event"]
-        count = event["registrations_for_sale_count"]
-        if count == 0:
-            return "empty"
-        if any(r["resale"]["available"] for r in event["registrations_for_sale"]):
-            return "available"
-        return "in_progress"
-    except Exception as e:
-        print(f"[Error] {source['name']} GraphQL: {e}", flush=True)
-        return source["last_state"]
-
 def get_state(source):
-    if source.get("graphql_event_id"):
-        return _get_atleta_graphql_state(source)
     try:
         url = source["url"]
         if url in _url_cache:
