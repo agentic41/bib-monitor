@@ -146,7 +146,7 @@ def _get_atleta_graphql_state(source):
                 "Accept": "application/json",
                 "X-XSRF-TOKEN": _urlparse.unquote(ATLETA_XSRF),
             },
-            cookies={"atleta_session": ATLETA_SESSION, "XSRF-TOKEN": ATLETA_XSRF},
+            cookies={"atleta_session": ATLETA_SESSION, "XSRF-TOKEN": ATLETA_XSRF, "cookie_consent": "1"},
             timeout=10,
         )
         print(f"[Debug] Amsterdam HTTP {resp.status_code}: {resp.text[:300]!r}", flush=True)
