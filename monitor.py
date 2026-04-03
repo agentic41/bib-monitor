@@ -24,14 +24,6 @@ SOURCES = [
         "last_state": "empty"
     },
          {
-        "name": "Amsterdam",
-        "url": "https://atleta.cc/e/nhIVWn50Rcez/resale",
-        "graphql_event_id": "nhIVWn50Rcez",
-        "no_bib_phrases": ["no bib", "no entries", "sold out", "no tickets", "There are currently no tickets for sale. Try again later."],
-        "booked_cooldown_until": 0,
-        "last_state": "empty"
-    },
-    {
         "name": "OdenseCityHalf",
         "url": "https://www.sportstiming.dk/event/16302/resale",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "No tickets for sale exists"],
