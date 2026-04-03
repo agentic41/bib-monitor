@@ -152,9 +152,9 @@ def _get_atleta_graphql_state(source):
             headers={"X-XSRF-TOKEN": xsrf, "Accept": "application/json"},
             timeout=10,
         )
-        if not resp.text:
+        if not resp.text or "application/json" not in resp.headers.get("Content-Type", ""):
             _atleta_csrf_expires = 0.0
-            print(f"[Error] {source['name']} GraphQL: empty response (HTTP {resp.status_code}), will re-fetch CSRF next cycle", flush=True)
+            print(f"[Error] {source['name']} GraphQL: non-JSON response (HTTP {resp.status_code}, {resp.headers.get('Content-Type', '?')}): {resp.text[:200]}", flush=True)
             return source["last_state"]
         event = resp.json()["data"]["event"]
         count = event["registrations_for_sale_count"]
