@@ -149,9 +149,7 @@ def _get_atleta_graphql_state(source):
             cookies={"atleta_session": ATLETA_SESSION, "XSRF-TOKEN": ATLETA_XSRF},
             timeout=10,
         )
-        if not resp.text:
-            print(f"[Error] {source['name']} GraphQL: empty body, HTTP {resp.status_code}", flush=True)
-            return source["last_state"]
+        print(f"[Debug] Amsterdam HTTP {resp.status_code}: {resp.text[:300]!r}", flush=True)
         body = resp.json()
         if "data" not in body:
             print(f"[Error] {source['name']} GraphQL: {body}", flush=True)
