@@ -2,6 +2,7 @@ import csv
 import os
 import time
 import datetime
+import urllib.parse
 from zoneinfo import ZoneInfo
 import requests
 
@@ -26,6 +27,7 @@ SOURCES = [
          {
         "name": "Amsterdam",
         "url": "https://atleta.cc/e/nhIVWn50Rcez/resale",
+        "graphql_event_id": "nhIVWn50Rcez",
         "no_bib_phrases": ["no bib", "no entries", "sold out", "no tickets", "There are currently no tickets for sale. Try again later."],
         "booked_cooldown_until": 0,
         "last_state": "empty"
@@ -123,7 +125,44 @@ def _classify_event(prev, new):
 
 _url_cache = {}  # per-cycle cache: url → response text
 
+_atleta_session = requests.Session()
+_atleta_session.headers.update(HEADERS)
+_atleta_csrf_expires = 0.0
+
+def _refresh_atleta_csrf(url):
+    global _atleta_csrf_expires
+    if time.time() < _atleta_csrf_expires - 60:
+        return
+    _atleta_session.get(url, timeout=10)
+    _atleta_csrf_expires = time.time() + 7200  # cookies expire in 2 h
+
+def _get_atleta_graphql_state(source):
+    try:
+        _refresh_atleta_csrf(source["url"])
+        xsrf = urllib.parse.unquote(_atleta_session.cookies.get("XSRF-TOKEN", ""))
+        query = ('{ event(id: "%s") { registrations_for_sale_count'
+                 ' registrations_for_sale(limit: 50) { resale { available } } } }'
+                 % source["graphql_event_id"])
+        resp = _atleta_session.post(
+            "https://atleta.cc/api/graphql",
+            json={"query": query},
+            headers={"X-XSRF-TOKEN": xsrf, "Accept": "application/json"},
+            timeout=10,
+        )
+        event = resp.json()["data"]["event"]
+        count = event["registrations_for_sale_count"]
+        if count == 0:
+            return "empty"
+        if any(r["resale"]["available"] for r in event["registrations_for_sale"]):
+            return "available"
+        return "in_progress"
+    except Exception as e:
+        print(f"[Error] {source['name']} GraphQL: {e}", flush=True)
+        return source["last_state"]
+
 def get_state(source):
+    if source.get("graphql_event_id"):
+        return _get_atleta_graphql_state(source)
     try:
         url = source["url"]
         if url in _url_cache:
